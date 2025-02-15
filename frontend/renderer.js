@@ -129,6 +129,46 @@ function addAudioHandlers() {
   });
 }
 
+// Helper function to create row HTML
+function createRowHTML(filePath, metadata = null) {
+    const fileName = path.parse(filePath).name;
+    const escapedPath = filePath.replace(/'/g, "\\'");
+    
+    const buttonControls = `
+        <button class="play-button" data-path="${escapedPath}">Play</button>
+        <button class="pause-button" style="display: none;" data-path="${escapedPath}">Pause</button>
+        <button class="delete-button" data-path="${filePath}">Delete</button>
+    `;
+
+    if (metadata) {
+        return `
+            <td>${metadata.common.artist || ""}</td>
+            <td>${metadata.common.title || fileName}</td>
+            <td>${formatDuration(metadata.format.duration)}</td>
+            <td>${metadata.common.key || ""}</td>
+            <td>${metadata.common.bpm || ""}</td>
+            <td>${buttonControls}</td>
+        `;
+    }
+
+    return `
+        <td></td>
+        <td>${fileName}</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td>${buttonControls}</td>
+    `;
+}
+
+// Helper function to create and setup a table row
+function createTableRow(filePath) {
+    const row = document.createElement("tr");
+    row.draggable = true;
+    row.dataset.path = filePath.replace(/'/g, "\\'");
+    return row;
+}
+
 // Function to load and display downloaded files
 async function loadDownloadedFiles() {
   const downloadsPath =
@@ -149,67 +189,36 @@ async function loadDownloadedFiles() {
 
     for (const file of files) {
       const filePath = path.join(downloadsPath, file);
+      const row = createTableRow(filePath);
+
       try {
         // Parse metadata from the audio file
         const metadata = await parseFile(filePath);
-
-        // Create table row
-        const row = document.createElement("tr");
-        row.innerHTML = `
-                    <td>${metadata.common.artist || ""}</td>
-                    <td>${metadata.common.title || path.parse(file).name}</td>
-                    <td>${formatDuration(metadata.format.duration)}</td>
-                    <td>${metadata.common.key || ""}</td>
-                    <td>${metadata.common.bpm || ""}</td>
-                    <td>
-                        <button class="play-button" data-path="${filePath.replace(
-                          /'/g,
-                          "\\'"
-                        )}">Play</button>
-                        <button class="pause-button" data-path="${filePath.replace(
-                          /'/g,
-                          "\\'"
-                        )}" style="display: none;">Pause</button>
-                        <button class="drag-handle" data-path="${filePath}">Drag</button>
-                        <button class="delete-button" data-path="${filePath}">Delete</button>
-                    </td>
-                `;
-        tableBody.appendChild(row);
+        row.innerHTML = createRowHTML(filePath, metadata);
       } catch (err) {
         console.error(`Error parsing metadata for ${file}:`, err);
-        // Add row with just filename if metadata parsing fails
-        const row = document.createElement("tr");
-        row.innerHTML = `
-                    <td></td>
-                    <td>${path.parse(file).name}</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td>
-                        <button class="play-button" data-path="${filePath.replace(
-                          /'/g,
-                          "\\'"
-                        )}">Play</button>
-                        <button class="pause-button" data-path="${filePath.replace(
-                          /'/g,
-                          "\\'"
-                        )}" style="display: none;">Pause</button>
-                        <button class="drag-handle" data-path="${filePath}">Drag</button>
-                        <button class="delete-button" data-path="${filePath}">Delete</button>
-                    </td>
-                `;
-        tableBody.appendChild(row);
+        row.innerHTML = createRowHTML(filePath);
       }
+
+      tableBody.appendChild(row);
     }
 
     // After all rows are added, add the audio handlers
     addAudioHandlers();
 
-    // Add drag handlers
-    document.querySelectorAll(".drag-handle").forEach((button) => {
-      button.addEventListener("mousedown", (e) => {
-        e.preventDefault();
-        ipcRenderer.send("drag-file", button.dataset.path);
+    // Replace the drag-handle event listeners with row drag events
+    document.querySelectorAll("#downloads-body tr").forEach((row) => {
+      row.addEventListener("dragstart", (event) => {
+        event.preventDefault();
+        const filePath = row.dataset.path;
+        ipcRenderer.send("drag-file", filePath);
+      });
+
+      // Prevent drag interference from buttons
+      row.querySelectorAll("button").forEach((button) => {
+        button.addEventListener("mousedown", (e) => {
+          e.stopPropagation();
+        });
       });
     });
 

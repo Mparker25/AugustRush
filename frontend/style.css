@@ -64,8 +64,17 @@ button:hover {
     background-color: #f9f9f9;
 }
 
-.drag-handle {
-    cursor: move;
+#downloads-table tr {
+    cursor: grab;
+    user-select: none;
+}
+
+
+/* Make sure buttons in the row don't interfere with dragging */
+#downloads-table button {
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
 }
 
 button {
