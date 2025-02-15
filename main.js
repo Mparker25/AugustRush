@@ -1,6 +1,8 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog } = require("electron");
 const path = require("path");
 const { PythonShell } = require("python-shell");
+const Store = require("electron-store");
+const store = new Store();
 
 let mainWindow;
 
@@ -46,9 +48,12 @@ function runPythonScript(scriptPath, args) {
 
 ipcMain.on("download-audio", async (event, url) => {
   try {
+    const downloadFolder =
+      store.get("downloadFolder") ||
+      path.join(__dirname, "frontend", "downloads");
     const result = await runPythonScript("youtube_downloader.py", [
       url,
-      path.join(__dirname, "frontend", "downloads"),
+      downloadFolder,
     ]);
     event.sender.send("download-complete", result);
   } catch (err) {
@@ -62,4 +67,14 @@ ipcMain.on("drag-file", (event, filePath) => {
     file: filePath,
     icon: path.join(__dirname, "frontend", "src", "drag-icon.png"),
   });
+});
+
+ipcMain.on("select-folder", async (event) => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ["openDirectory"],
+  });
+
+  if (!result.canceled) {
+    event.sender.send("folder-selected", result.filePaths[0]);
+  }
 });

@@ -2,6 +2,8 @@ const { ipcRenderer } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const { parseFile } = require("music-metadata");
+const Store = require("electron-store");
+const store = new Store();
 
 // Load files when the page loads
 document.addEventListener("DOMContentLoaded", loadDownloadedFiles);
@@ -13,6 +15,26 @@ document.getElementById("download").addEventListener("click", () => {
   statusMessage.textContent = "Download started...";
   statusMessage.style.display = "block";
   ipcRenderer.send("download-audio", url);
+});
+
+document.getElementById("select-folder").addEventListener("click", () => {
+  ipcRenderer.send("select-folder");
+});
+
+document.getElementById("reset-folder").addEventListener("click", () => {
+  // Clear the stored folder setting
+  store.delete("downloadFolder");
+  // Update display and reload files
+  updateCurrentFolderDisplay();
+  loadDownloadedFiles();
+});
+
+ipcRenderer.on("folder-selected", (event, folderPath) => {
+  if (folderPath) {
+    store.set("downloadFolder", folderPath);
+    updateCurrentFolderDisplay();
+    loadDownloadedFiles();
+  }
 });
 
 ipcRenderer.on("download-complete", (event, filePath) => {
@@ -109,7 +131,8 @@ function addAudioHandlers() {
 
 // Function to load and display downloaded files
 async function loadDownloadedFiles() {
-  const downloadsPath = path.join(__dirname, "downloads");
+  const downloadsPath =
+    store.get("downloadFolder") || path.join(__dirname, "downloads");
   const tableBody = document.getElementById("downloads-body");
   tableBody.innerHTML = ""; // Clear existing rows
 
@@ -216,8 +239,31 @@ async function loadDownloadedFiles() {
     console.error("Error loading downloaded files:", err);
   }
 }
+
 // Reload files when a new download completes
 ipcRenderer.on("download-complete", (event, filePath) => {
   loadDownloadedFiles();
 });
+
+// Add new function to display current folder
+function updateCurrentFolderDisplay() {
+  const currentFolder =
+    store.get("downloadFolder") || path.join(__dirname, "downloads");
+  const folderElement = document.getElementById("current-folder");
+  const selectButton = document.getElementById("select-folder");
+
+  // Prepare the display text
+  let displayPath = currentFolder;
+  if (displayPath.length > 50) {
+    displayPath = "..." + displayPath.slice(-50);
+  }
+
+  // Update the tooltip text
+  folderElement.textContent = `Current Folder: ${displayPath}`;
+  // Also set as button title for native tooltip
+  selectButton.title = `Current Folder: ${currentFolder}`;
+}
+
+// Initialize folder display when page loads
+updateCurrentFolderDisplay();
 

@@ -19,6 +19,7 @@
     "electron-builder": "^25.1.8"
   },
   "dependencies": {
+    "electron-store": "^8.2.0",
     "music-metadata": "^10.7.1",
     "python-shell": "^5.0.0"
   },

@@ -10,6 +10,13 @@
     <h1>August Rush</h1>
     <input type="text" id="url" placeholder="Paste YouTube URL">
     <button id="download">Download MP3</button>
+    <div class="folder-controls">
+        <div class="folder-button-group">
+            <button id="select-folder" title="">Choose Download Folder</button>
+            <button id="reset-folder">Reset to Default</button>
+        </div>
+        <span id="current-folder" class="tooltip"></span>
+    </div>
     <div id="error-message" style="display: none;"></div>
     <div id="status-message" class="status-message"></div>
     

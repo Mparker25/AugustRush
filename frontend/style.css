@@ -121,3 +121,30 @@ button {
     color: #c62828;
     border: 1px solid #c62828;
 }
+
+.folder-controls {
+    position: relative;
+    display: inline-block;
+}
+
+.folder-button-group {
+    display: inline-block;
+}
+
+.tooltip {
+    visibility: hidden;
+    position: absolute;
+    left: 0;
+    top: 100%;
+    background-color: #555;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    z-index: 1;
+    white-space: nowrap;
+    margin-top: 5px;
+}
+
+#select-folder:hover + .tooltip {
+    visibility: visible;
+}
