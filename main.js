@@ -7,8 +7,8 @@ let ws;
 
 function setupWebSocket() {
   const WebSocket = require('ws');
-  ws = new WebSocket('ws://localhost:5000/ws', {
-    handshakeTimeout: 1000 // 1 second timeout
+  ws = new WebSocket("ws://localhost:8000/ws", {
+    handshakeTimeout: 1000, // 1 second timeout
   });
   
   ws.on('message', (data) => {

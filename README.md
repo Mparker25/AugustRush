@@ -1,11 +1,16 @@
 
-# Development:
+# Getting the App Running:
 
 ## Backend 
-(Start the python server first using fastapi <include code example>)
-
+Start the python server first using fastapi
+```
+./bootstrap
+```
 ## Front end 
 (Start the electron app <Include code example>)
+```
+npm start
+```
 
 # Building and Deploying Electron App
 < Insert instructions here>
