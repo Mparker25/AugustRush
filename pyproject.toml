@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "August-Rush"
+version = "1.0.0"
+description = "Inspired by the movie August Rush. This app allows you to download audio from YouTube and save it to your computer."
+authors = [
+    {name = "Malik B. Parker"}
+    ]
+dependencies = [
+    "fastapi[standard]",
+    "yt-dlp",
+    "pyinstaller",
+    ]
+
+[tool.setuptools]
+packages = ["backend"]
+
+[tool.pyright]
+reportMissingImports = true
