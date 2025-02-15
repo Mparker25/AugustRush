@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Check if virtual environment exists
+if [ ! -d "env" ]; then
+    echo "Creating Python virtual environment..."
+    python3 -m venv env
+    if [ $? -ne 0 ]; then
+        echo "Failed to create virtual environment"
+        exit 1
+    fi
+fi
+
+# Check if we're in a Python virtual environment
+if [ -z "$VIRTUAL_ENV" ]; then
+    echo "Please activate the environment with: \n. ./env/bin/activate"
+fi
+
+pip install -e .
+pip list
+echo "^^^ dependencies installed"
+
+uvicorn backend.downloader:app --host 0.0.0.0 --port 5000 --reload --log-level debug
+echo "^^^ backend server running"
+
