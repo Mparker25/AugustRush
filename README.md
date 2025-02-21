@@ -1,14 +1,9 @@
 
-# Getting the App Running:
+# Getting the App Running
 
-## Backend 
-Start the python server first using fastapi
-```
-./bootstrap
-```
-## Front end 
-(Start the electron app <Include code example>)
-```
+Start the electron app
+
+``` shell
 npm start
 ```
 

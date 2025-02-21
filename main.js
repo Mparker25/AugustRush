@@ -84,7 +84,10 @@ ipcMain.on("drag-file", (event, filePath) => {
 
 ipcMain.on("select-folder", async (event) => {
   const result = await dialog.showOpenDialog(mainWindow, {
-    properties: ["openDirectory"],
+    title: "Choose Download Folder",
+    defaultPath:
+      store.get("downloadFolder") || path.join(__dirname, "downloads"),
+    properties: ["openDirectory", "createDirectory"],
   });
 
   if (!result.canceled) {
