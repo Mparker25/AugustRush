@@ -7,37 +7,71 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>August Rush</h1>
-    <input type="text" id="url" placeholder="Paste YouTube URL">
-    <button id="download">Download MP3</button>
-    <div class="folder-controls">
-        <div class="folder-button-group">
-            <button id="select-folder" title="">Choose Download Folder</button>
-            <button id="reset-folder">Reset to Default</button>
+    <div class="container">
+        <div class="header-row">
+            <div class="header-image"></div>
         </div>
-        <span id="current-folder" class="tooltip"></span>
+        <div class="controls-container">
+            <input type="text" id="url" placeholder="Paste YouTube URL">
+            <button id="download">Download MP3</button>
+            <div class="folder-controls">
+                <div class="folder-button-group">
+                    <button id="select-folder" title="">Choose Download Folder</button>
+                    <button id="reset-folder">Reset to Default</button>
+                </div>
+                <span id="current-folder" class="tooltip"></span>
+            </div>
+            
+        </div>
+
+        <div id="downloads-table-container">
+            <div class="table-header">
+                <h2>Downloaded Files</h2>
+                <div id="status-message" class="status-message"></div>
+                <div id="error-message" style="display: none;"></div>
+            </div>
+            <div class="table-wrapper">
+                <table id="downloads-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 80%">Title</th>
+                            <!-- <th>Runtime</th> -->
+                            <!-- <th>Key</th> -->
+                            <!-- <th>BPM</th> -->
+                            <th style="width: 20%">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="downloads-body">
+                        <!-- Table rows will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-    <div id="error-message" style="display: none;"></div>
-    <div id="status-message" class="status-message"></div>
-    
-    <!-- Add table for downloaded files -->
-    <div id="downloads-table-container">
-        <h2>Downloaded Files</h2>
-        <table id="downloads-table">
-            <thead>
-                <tr>
-                    <th>Artist</th>
-                    <th>Title</th>
-                    <th>Runtime</th>
-                    <th>Key</th>
-                    <th>BPM</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="downloads-body">
-                <!-- Table rows will be inserted here -->
-            </tbody>
-        </table>
+
+    <!-- Mini player remains outside container for full-width background -->
+    <div id="mini-player" class="mini-player hidden">
+        <div class="mini-player-content">
+            <div class="track-info">
+                <span id="current-track-title">No track selected</span>
+                <span id="current-track-artist"></span>
+            </div>
+            <div class="player-controls">
+                <button id="play-pause-button">
+                    <span class="play-icon">▶</span>
+                    <span class="pause-icon hidden">⏸</span>
+                </button>
+                <div class="timeline-container">
+                    <div id="timeline">
+                        <div id="playhead"></div>
+                    </div>
+                    <div class="time-display">
+                        <span id="current-time">0:00</span>
+                        <span id="duration">0:00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="renderer.js"></script>

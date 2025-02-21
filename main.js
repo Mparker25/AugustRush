@@ -9,7 +9,9 @@ let mainWindow;
 app.on("ready", () => {
   mainWindow = new BrowserWindow({
     width: 800,
-    height: 600,
+    height: 750,
+    minWidth: 800,
+    minHeight: 750,
     // Use preload.js scripts and contextBridge.exposeInMainWorld()
     // to safely expose specific IPC functions to the renderer.
     // This is the recommended secure approach, creating a controlled
@@ -39,9 +41,20 @@ function runPythonScript(scriptPath, args) {
   };
 
   return new Promise((resolve, reject) => {
-    PythonShell.run(scriptPath, options, function (err, results) {
+    let pyshell = new PythonShell(scriptPath, options);
+    let output = [];
+
+    pyshell.on("message", function (message) {
+      output.push(message);
+    });
+
+    pyshell.on("error", function (err) {
+      reject(err);
+    });
+
+    pyshell.end(function (err) {
       if (err) reject(err);
-      resolve(results);
+      resolve(output);
     });
   });
 }

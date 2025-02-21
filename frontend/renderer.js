@@ -45,7 +45,7 @@ ipcRenderer.on("download-complete", (event, filePath) => {
   statusMessage.textContent = "Download complete!";
   setTimeout(() => {
     statusMessage.style.display = "none";
-  }, 5000);
+  }, 2000);
   loadDownloadedFiles();
 });
 
@@ -56,7 +56,7 @@ ipcRenderer.on("download-error", (event, errorMessage) => {
   // Hide error after 5 seconds
   setTimeout(() => {
     statusMessage.style.display = "none";
-  }, 5000);
+  }, 2000);
 });
 
 // Function to format duration in seconds to MM:SS
@@ -72,101 +72,154 @@ let currentAudio = null;
 let currentPlayButton = null;
 let currentPauseButton = null;
 
-// Add click handlers after creating the table rows
-function addAudioHandlers() {
-  document.querySelectorAll(".play-button").forEach((button) => {
-    button.addEventListener("click", () => {
-      const filePath = button.dataset.path;
-      const pauseButton = button.nextElementSibling;
+// Add these variables at the top of the file
+let audioPlayer = new Audio();
+let currentTrackData = null;
+let isDragging = false;
 
-      // If there's already something playing, stop it
-      if (currentAudio) {
-        currentAudio.pause();
-        if (currentPlayButton) currentPlayButton.style.display = "inline";
-        if (currentPauseButton) currentPauseButton.style.display = "none";
-      }
+// Replace the old audio handler functions with this new one
+function setupTableRowHandlers() {
+  document.querySelectorAll("#downloads-body tr").forEach((row) => {
+    row.addEventListener("click", async () => {
+      const filePath = row.dataset.path;
+      console.log("Clicked row", filePath);
 
-      // If we're clicking the same button that was playing, just stop
-      if (currentPlayButton === button) {
-        currentAudio = null;
-        currentPlayButton = null;
-        currentPauseButton = null;
-        return;
-      }
+      try {
+        // Use parseFile from promises
+        const metadata = null; //await parseFile(filePath);
 
-      // Play the new audio
-      currentAudio = new Audio(filePath);
-      currentAudio.play();
-      currentPlayButton = button;
-      currentPauseButton = pauseButton;
+        // Update mini player display
+        document.getElementById("current-track-title").textContent =
+          path.parse(filePath).name;
+        document.getElementById("current-track-artist").textContent = "";
 
-      // Show/hide appropriate buttons
-      button.style.display = "none";
-      pauseButton.style.display = "inline";
+        // Show mini player
+        document.getElementById("mini-player").classList.remove("hidden");
 
-      // When audio ends
-      currentAudio.onended = () => {
-        button.style.display = "inline";
-        pauseButton.style.display = "none";
-        currentAudio = null;
-        currentPlayButton = null;
-        currentPauseButton = null;
-      };
-    });
-  });
+        // If it's a different track, load and play it
+        if (currentTrackData?.filePath !== filePath) {
+          currentTrackData = {
+            filePath,
+            metadata,
+            row,
+          };
 
-  document.querySelectorAll(".pause-button").forEach((button) => {
-    button.addEventListener("click", () => {
-      if (currentAudio) {
-        currentAudio.pause();
-        button.style.display = "none";
-        button.previousElementSibling.style.display = "inline";
-        currentAudio = null;
-        currentPlayButton = null;
-        currentPauseButton = null;
+          audioPlayer.src = filePath;
+          audioPlayer.play();
+          updatePlayPauseButton(true);
+        }
+      } catch (err) {
+        console.error("Error loading track:", err);
       }
     });
   });
 }
 
+// Add mini player control functions
+function setupMiniPlayer() {
+  const playPauseButton = document.getElementById("play-pause-button");
+  const timeline = document.getElementById("timeline");
+  const playhead = document.getElementById("playhead");
+
+  // Play/Pause button handler
+  playPauseButton.addEventListener("click", () => {
+    if (audioPlayer.paused) {
+      audioPlayer.play();
+      updatePlayPauseButton(true);
+    } else {
+      audioPlayer.pause();
+      updatePlayPauseButton(false);
+    }
+  });
+
+  // Timeline click handler
+  timeline.addEventListener("click", (e) => {
+    if (!currentTrackData) return;
+
+    const rect = timeline.getBoundingClientRect();
+    const pos = (e.clientX - rect.left) / rect.width;
+    audioPlayer.currentTime = pos * audioPlayer.duration;
+  });
+
+  // Playhead drag handlers
+  playhead.addEventListener("mousedown", () => {
+    isDragging = true;
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (!isDragging || !currentTrackData) return;
+
+    const rect = timeline.getBoundingClientRect();
+    let pos = (e.clientX - rect.left) / rect.width;
+    pos = Math.max(0, Math.min(1, pos));
+
+    audioPlayer.currentTime = pos * audioPlayer.duration;
+  });
+
+  document.addEventListener("mouseup", () => {
+    isDragging = false;
+  });
+
+  // Audio player event handlers
+  audioPlayer.addEventListener("timeupdate", updateProgress);
+  audioPlayer.addEventListener("ended", () => {
+    updatePlayPauseButton(false);
+    audioPlayer.currentTime = 0;
+  });
+}
+
+function updatePlayPauseButton(isPlaying) {
+  const playIcon = document.querySelector(".play-icon");
+  const pauseIcon = document.querySelector(".pause-icon");
+
+  if (isPlaying) {
+    playIcon.classList.add("hidden");
+    pauseIcon.classList.remove("hidden");
+  } else {
+    playIcon.classList.remove("hidden");
+    pauseIcon.classList.add("hidden");
+  }
+}
+
+function updateProgress() {
+  if (!currentTrackData) return;
+
+  const timeline = document.getElementById("timeline");
+  const playhead = document.getElementById("playhead");
+  const currentTimeEl = document.getElementById("current-time");
+  const durationEl = document.getElementById("duration");
+
+  const progress = audioPlayer.currentTime / audioPlayer.duration;
+  playhead.style.left = `${progress * 100}%`;
+
+  currentTimeEl.textContent = formatDuration(audioPlayer.currentTime);
+  durationEl.textContent = formatDuration(audioPlayer.duration);
+}
+
 // Helper function to create row HTML
 function createRowHTML(filePath, metadata = null) {
-    const fileName = path.parse(filePath).name;
-    const escapedPath = filePath.replace(/'/g, "\\'");
-    
-    const buttonControls = `
-        <button class="play-button" data-path="${escapedPath}">Play</button>
-        <button class="pause-button" style="display: none;" data-path="${escapedPath}">Pause</button>
-        <button class="delete-button" data-path="${filePath}">Delete</button>
-    `;
-
-    if (metadata) {
-        return `
-            <td>${metadata.common.artist || ""}</td>
-            <td>${metadata.common.title || fileName}</td>
-            <td>${formatDuration(metadata.format.duration)}</td>
-            <td>${metadata.common.key || ""}</td>
-            <td>${metadata.common.bpm || ""}</td>
-            <td>${buttonControls}</td>
-        `;
-    }
-
-    return `
-        <td></td>
-        <td>${fileName}</td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td>${buttonControls}</td>
+  const fileName = path.parse(filePath).name;
+  return `
+        <td style="width: 80%">${fileName}</td>
+        <!-- <td>${
+          metadata?.format?.duration
+            ? formatDuration(metadata.format.duration)
+            : ""
+        }</td> -->
+        <!-- <td>${metadata?.common?.key || ""}</td> -->
+        <!-- <td>${metadata?.common?.bpm || ""}</td> -->
+        <td style="width: 20%">
+            <button class="delete-button" data-path="${filePath}">Delete</button>
+        </td>
     `;
 }
 
 // Helper function to create and setup a table row
 function createTableRow(filePath) {
-    const row = document.createElement("tr");
-    row.draggable = true;
-    row.dataset.path = filePath.replace(/'/g, "\\'");
-    return row;
+  const row = document.createElement("tr");
+  row.draggable = true;
+  row.dataset.path = filePath;
+  return row;
 }
 
 // Function to load and display downloaded files
@@ -192,7 +245,7 @@ async function loadDownloadedFiles() {
       const row = createTableRow(filePath);
 
       try {
-        // Parse metadata from the audio file
+        // Use parseFile from promises
         const metadata = await parseFile(filePath);
         row.innerHTML = createRowHTML(filePath, metadata);
       } catch (err) {
@@ -203,8 +256,9 @@ async function loadDownloadedFiles() {
       tableBody.appendChild(row);
     }
 
-    // After all rows are added, add the audio handlers
-    addAudioHandlers();
+    // After all rows are added:
+    setupTableRowHandlers();
+    setupMiniPlayer();
 
     // Replace the drag-handle event listeners with row drag events
     document.querySelectorAll("#downloads-body tr").forEach((row) => {
@@ -224,16 +278,22 @@ async function loadDownloadedFiles() {
 
     // Add delete handlers
     document.querySelectorAll(".delete-button").forEach((button) => {
-      button.addEventListener("click", () => {
+      button.addEventListener("click", (e) => {
+        e.stopPropagation(); // Prevent the row click event from firing
         const filePath = button.dataset.path;
         if (confirm("Are you sure you want to delete this file?")) {
           try {
-            // If this file is currently playing, stop it
-            if (currentAudio && currentAudio.src.includes(filePath)) {
-              currentAudio.pause();
-              currentAudio = null;
-              currentPlayButton = null;
-              currentPauseButton = null;
+            // If this file is currently playing, stop it and hide mini player
+            if (currentTrackData && currentTrackData.filePath === filePath) {
+              audioPlayer.pause();
+              audioPlayer.src = ""; // Clear the audio source
+              currentTrackData = null;
+              document.getElementById("mini-player").classList.add("hidden");
+              updatePlayPauseButton(false);
+              // Reset the display text
+              document.getElementById("current-track-title").textContent =
+                "No track selected";
+              document.getElementById("current-track-artist").textContent = "";
             }
             fs.unlinkSync(filePath);
             button.closest("tr").remove();
