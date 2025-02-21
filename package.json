@@ -26,9 +26,7 @@
   "build": {
     "appId": "com.augustrush.app",
     "files": [
-      "**/*",
-      "!backend/downloader.py",
-      "backend/dist/**/*"
+      "**/*"
     ],
     "extraResources": [
       {
