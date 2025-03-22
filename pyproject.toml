@@ -10,13 +10,12 @@ authors = [
     {name = "Malik B. Parker"}
     ]
 dependencies = [
-    "fastapi[standard]",
     "yt-dlp",
     "pyinstaller",
     ]
 
 [tool.setuptools]
-packages = ["backend"]
+packages = ["python_scripts"]
 
 [tool.pyright]
 reportMissingImports = true

@@ -1,13 +1,14 @@
 {
-  "name": "august-rush",
+  "name": "August-Rush",
   "version": "1.0.0",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron .",
-    "build:python": "node build-scripts/build-python.js",
-    "build:electron": "electron-builder",
-    "build": "npm run build:python && npm run build:electron"
+    "start": "cross-env NODE_ENV=development electron .",
+    "start:prod": "cross-env NODE_ENV=production electron .",
+    "build": "node build.js",
+    "build:mac": "cross-env NODE_ENV=production node build.js --mac",
+    "build:win": "cross-env NODE_ENV=production node build.js --win"
   },
   "keywords": [],
   "author": "",
@@ -26,22 +27,42 @@
   "build": {
     "appId": "com.augustrush.app",
     "files": [
-      "**/*"
+      "**/*",
+      "!dist/",
+      "!python_scripts/",
+      "!**/*.spec"
     ],
     "extraResources": [
       {
-        "from": "backend/dist/downloader",
-        "to": "backend"
+        "from": "dist/Youtube-Downloader",
+        "to": "Youtube-Downloader",
+        "filter": ["!*.spec"]
+      },
+      {
+        "from": "dist/Youtube-Downloader.exe",
+        "to": "Youtube-Downloader.exe",
+        "filter": ["!*.spec"]
+      },
+      {
+        "from": "ffmpeg/ffmpeg",
+        "to": "ffmpeg"
       }
     ],
     "win": {
-      "target": "nsis",
-      "certificateFile": "path/to/cert.pfx",
-      "certificatePassword": "password"
+      "target": [
+        "nsis",
+        "portable"
+      ]
     },
     "mac": {
-      "target": "dmg",
-      "identity": "Your Developer ID"
+      "target": [
+        "zip",
+        "dmg"
+      ],
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.plist",
+      "entitlementsInherit": "build/entitlements.plist"
     },
     "linux": {
       "target": "AppImage"
