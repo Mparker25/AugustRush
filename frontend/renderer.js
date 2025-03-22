@@ -8,6 +8,19 @@ const store = new Store();
 // Load files when the page loads
 document.addEventListener("DOMContentLoaded", loadDownloadedFiles);
 
+// Tell the main process we're ready to receive logs
+ipcRenderer.send('ready');
+
+// Listen for forwarded logs
+ipcRenderer.on('main-process-log', (event, args) => {
+  console.log('[Main Process]', ...args);
+});
+
+ipcRenderer.on('main-process-error', (event, args) => {
+  console.error('[Main Process]', ...args);
+});
+
+
 document.getElementById("download").addEventListener("click", () => {
   const url = document.getElementById("url").value;
   const statusMessage = document.getElementById("status-message");
@@ -335,4 +348,3 @@ function updateCurrentFolderDisplay() {
 
 // Initialize folder display when page loads
 updateCurrentFolderDisplay();
-
